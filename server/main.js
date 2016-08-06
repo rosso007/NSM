@@ -128,10 +128,5 @@ SyncedCron.add({
 SyncedCron.start();
 
 
-  Meteor.methods({
-    getIndicators: function () {
-		  getIndicators();
-      return console.log(Date.now() + ' Indicators grab started.');
-    },
-  });
+
 }
