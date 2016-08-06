@@ -1,0 +1,17 @@
+<head>
+  <title>ASX DATA</title>
+</head>
+
+<body>
+  <div class="container">
+    <header>
+      <h1>Stock Model</h1>
+    </header>
+      {{> requestData}}
+  </div>
+</body>
+
+<template name="requestData">
+  <button name="getIndicators" class="getIndicators">Get Indicators</button>
+  <button name="downloadData" class="downloadData">Download Data</button>
+</template>
