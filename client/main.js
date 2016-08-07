@@ -1,13 +1,13 @@
 if (Meteor.isClient) {
   // This code only runs on the client
-  Template.requestData.events({
+/*  Template.requestData.events({
     "click .getIndicators": function () {
             Meteor.call('getIndicators',function (error,result) {});
         },
         "click .downloadData": function () {
             downloadData(inds);
         }                       
-    });
+    });*/
 
     function downloadData(inds) {
         var data;
