@@ -1,6 +1,5 @@
 if (Meteor.isServer) {
   let requestArray = [];
-  let data = {};
   let asxRequest = {
     url: 'https://www.google.com/finance?',
     output: 'json',
@@ -100,44 +99,75 @@ if (Meteor.isServer) {
   }
 
   requestBuilder(asxRequest);
+  
   function assign(object, source) {
     Object.keys(source).forEach(function keys(key) {
       object[key] = source[key];
     });
   }
 
+  function numberNormaliser(value) {
+    let valueM;
+    let newValue;
+    if (value.includes('M')) {
+      valueM = value.replace('M', '');
+      newValue = valueM * 1000000;
+      return newValue;
+    } else if (value.includes('B')) {
+      valueM = value.replace('B', '');
+      newValue = valueM * 1000000000;
+      return newValue;
+    }
+    return value;
+  }
+
+  function round(value, decimals) {
+    return Number(Math.round(value + 'e' + decimals) + 'e-' + decimals);
+  }
+
   function getIndicators() {
     for (let i = requestArray.length - 1; i >= 0; i--) {
-      data = {};
+      let data = {};
       HTTP.get(requestArray[i], function requestResult(error, result) {
         let results = eval('(' + result.content + ')');
-        assign(data,
-          {['date']: new Date().toJSON().slice(0, 10)}
-        );
-        assign(data,
-          {['indicator']: results.searchresults[0].columns[0].field}
-        );
-        for (let p = results.searchresults.length - 1; p >= 0; p--) {
-          assign(data,
-            {
-              [results.searchresults[p].ticker]:
-              results.searchresults[p].columns[0].value,
+        let field = results.searchresults[0].columns[0].field;
+        assign(data, {['date']: new Date().toJSON().slice(0, 10)});
+        assign(data, {['indicator']: field});
+        if (field === 'MarketCap') {
+          for (let p = results.searchresults.length - 1; p >= 0; p--) {
+            let value = results.searchresults[p].columns[0].value;
+            let ticker = results.searchresults[p].ticker;
+            if (value !== '-') {
+              if (value !== 'indicator' && value !== 'date') {
+                let v = value.replace(',', '');
+                let nV = numberNormaliser(v);
+                let rNV = round(nV, 2);
+                assign(data, {[ticker]: rNV});
+              } else {
+                assign(data, {[ticker]: value});
+              }
             }
-          );
+          }
+        } else {
+          for (let p = results.searchresults.length - 1; p >= 0; p--) {
+            let value = results.searchresults[p].columns[0].value;
+            let ticker = results.searchresults[p].ticker;
+            if (value !== '-') {
+              assign(data, {[ticker]: value});
+            }
+          }
         }
-        console.log('finished grabbing ' +
-          results.searchresults[0].columns[0].field
-        );
-        DataFrame.insert(data, function cb(err, response) {
+        console.log('Added ' + field);
+        if (i === 0) {console.log('Finishing grabbing all indicators.');}
+        DataFrame.insert(data, function cb(err, ) {
           if (err) {
             console.log(err);
-          } else {
-            console.log(response);
           }
         });
       });
     }
   }
+
 
   SyncedCron.add({
     name: 'Grab indicators from google finance.',
