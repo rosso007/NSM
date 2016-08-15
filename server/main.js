@@ -99,7 +99,7 @@ if (Meteor.isServer) {
   }
 
   requestBuilder(asxRequest);
-  
+
   function assign(object, source) {
     Object.keys(source).forEach(function keys(key) {
       object[key] = source[key];
@@ -133,26 +133,16 @@ if (Meteor.isServer) {
         let field = results.searchresults[0].columns[0].field;
         assign(data, {['date']: new Date().toJSON().slice(0, 10)});
         assign(data, {['indicator']: field});
-        if (field === 'MarketCap') {
-          for (let p = results.searchresults.length - 1; p >= 0; p--) {
-            let value = results.searchresults[p].columns[0].value;
-            let ticker = results.searchresults[p].ticker;
-            if (value !== '-') {
-              if (value !== 'indicator' && value !== 'date') {
-                let v = value.replace(',', '');
-                let nV = numberNormaliser(v);
-                let rNV = round(nV, 2);
-                assign(data, {[ticker]: rNV});
-              } else {
-                assign(data, {[ticker]: value});
-              }
-            }
-          }
-        } else {
-          for (let p = results.searchresults.length - 1; p >= 0; p--) {
-            let value = results.searchresults[p].columns[0].value;
-            let ticker = results.searchresults[p].ticker;
-            if (value !== '-') {
+        for (let p = results.searchresults.length - 1; p >= 0; p--) {
+          let value = results.searchresults[p].columns[0].value;
+          let ticker = results.searchresults[p].ticker;
+          if (value !== '-') {
+            if (value !== 'indicator' && value !== 'date') {
+              let v = value.replace(',', '');
+              let nV = numberNormaliser(v);
+              let rNV = round(nV, 2);
+              assign(data, {[ticker]: rNV});
+            } else {
               assign(data, {[ticker]: value});
             }
           }
@@ -167,7 +157,6 @@ if (Meteor.isServer) {
       });
     }
   }
-
 
   SyncedCron.add({
     name: 'Grab indicators from google finance.',
